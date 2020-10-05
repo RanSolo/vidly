@@ -6,7 +6,7 @@ node {
      commit_id = readFile('.git/commit-id').trim()
    }
    stage('test') {
-     def myTestContainer = docker.image('node:12.18.4')
+     def myTestContainer = docker.image('node:4.6')
      myTestContainer.pull()
      myTestContainer.inside {
        sh 'npm install --only=dev'
@@ -14,8 +14,8 @@ node {
      }
    }
    stage('test with a DB') {
-     def mongodb = docker.image('mongodb').run("-e MONGODB_ALLOW_EMPTY_PASSWORD=yes") 
-     def myTestContainer = docker.image('node:12.18.4')
+     def mongodb = docker.image('mongodb').run("-e MYSQL_ALLOW_EMPTY_PASSWORD=yes") 
+     def myTestContainer = docker.image('node:4.6')
      myTestContainer.pull()
      myTestContainer.inside("--link ${mongodb.id}:mongodb") { // using linking, mongodb will be available at host: mongodb, port: 3306
           sh 'npm install --only=dev' 
