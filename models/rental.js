@@ -45,6 +45,7 @@ const Rental = mongoose.model(
 		dateOut: {
 			type: Date,
 			required: true,
+			default: Date.now,
 		},
 		dateReturned: Date,
 		rentalFee: {
@@ -55,12 +56,12 @@ const Rental = mongoose.model(
 );
 
 function validateRental(rental) {
-	const schema = {
-		customerId: Joi.string().required(),
-		movieId: Joi.string().required(),
-	};
+	const schema = Joi.object({
+		customerId: Joi.objectId().required(),
+		movieId: Joi.objectId().required(),
+	});
 
-	return Joi.validate(rental, schema);
+	return schema.validate(rental);
 }
 
 exports.Rental = Rental;

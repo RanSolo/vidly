@@ -17,26 +17,21 @@ const Customer = mongoose.model(
 		phone: {
 			type: String,
 			required: true,
-			maxlength: 5,
-			minlength: 50,
+			minlength: 5,
+			maxlength: 50,
 		},
 	}),
 );
 
 const validateCustomer = (customer) => {
-	const schema = {
+	const schema = Joi.object({
 		isGold: Joi.bool(),
-		phone: Joi.string(),
+		phone: Joi.string().min(7).max(30),
 		name: Joi.string().min(3).required(),
-	};
-	const result = Joi.validate(customer, schema);
+	});
+	const result = schema.validate(customer);
 	return result.error;
-};
-
-const handle404 = (customer, _id, res) => {
-	if (!customer) res.status(404).send(`No customer id of ${_id} exists.`);
 };
 
 exports.Customer = Customer;
 exports.validate = validateCustomer;
-exports.handle404 = handle404;

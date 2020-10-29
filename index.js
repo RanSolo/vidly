@@ -14,6 +14,8 @@ const logger = require("./middleware/logger");
 const authenticator = require("./authenticator");
 const { urlencoded } = require("express");
 const mongoose = require("mongoose");
+const Joi = require("joi");
+Joi.objectId = require("joi-objectid")(Joi);
 
 mongoose
 	.connect("mongodb://localhost/vidly", {

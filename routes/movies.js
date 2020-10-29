@@ -1,9 +1,10 @@
-const mongoose = require("mongoose");
 const express = require("express");
+const mongoose = require("mongoose");
 const router = express.Router();
-const { Movie, validate, handle404 } = require("../models/movie");
+const { Movie, validate } = require("../models/movie");
 const { Genre } = require("../models/genre");
 const { handle400 } = require("../utils/handle400");
+const { handle404 } = require("../utils/handle404");
 
 router.get("/", async (req, res) => {
 	const movies = await Movie.find().sort("name");
@@ -31,7 +32,9 @@ router.post("/", async (req, res) => {
 	handle400(error, res);
 
 	try {
-		const movie = createMovie(req.body, res);
+		const movie = await createMovie(req.body, res);
+		await movie.save();
+		console.log("movie", movie);
 		console.log("success");
 	} catch (error) {
 		console.error(error);
@@ -49,36 +52,30 @@ router.put("/:id", async (req, res) => {
 	res.send(movie);
 });
 
-router.delete("/:id", async (req, res) => {
-	const movie = await Movie.findOneAndRemove(req.params.id);
-	handle404(movie, req.params.id, res);
-	res.send(movie);
+router.delete("/:id", (req, res) => {
+	Movie.findByIdAndRemove(req.params.id, function (err, movie) {
+		if (err) console.error("ERROR: ", err);
+		if (!movie) handle404("movie", req.params.id, res);
+		if (movie) res.send(movie);
+	});
 });
 
 const createMovie = async (reqBody, res) => {
-	let movie = {};
 	try {
 		const genre = await Genre.findById(reqBody.genreId);
-		if (!genre) return res.status(400).sent("Invalid Genre");
-		movie = newMovie(reqBody, genre.name);
+		if (!genre) return res.status(400);
+		reqBody.gName = genre.name;
+		return await newMovie(reqBody);
 	} catch (e) {
-		console.error(e);
-	}
-	try {
-		movie = await movie.save();
-		return movie;
-		console.log("saved", movie);
-		res.send(movie);
-	} catch (error) {
-		console.error("error: ", error.message);
+		console.error("error: ", e.message);
 	}
 };
 
 const newMovie = (reqBody, name) => {
-	const { title, genreId, numberInStock, dailyRentalRate } = reqBody;
+	const { title, genreId, numberInStock, dailyRentalRate, gName } = reqBody;
 	return new Movie({
 		title,
-		genre: { genreId, name },
+		genre: { genreId, name: gName },
 		numberInStock,
 		dailyRentalRate,
 	});

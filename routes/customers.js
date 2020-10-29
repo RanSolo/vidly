@@ -1,8 +1,9 @@
 const mongoose = require("mongoose");
 const express = require("express");
 const router = express.Router();
-const { Customer, validate, handle404 } = require("../models/customer");
+const { Customer, validate } = require("../models/customer");
 const { handle400 } = require("../utils/handle400");
+const { handle404 } = require("../utils/handle404");
 
 router.get("/", async (req, res) => {
 	const customers = await Customer.find().sort("name");
@@ -13,10 +14,10 @@ router.get("/:id", async (req, res) => {
 	const _id = req.params.id;
 	try {
 		const customer = await Customer.findOne({ _id });
+		handle404("customer", _id, res);
 		res.send(customer);
 	} catch (error) {
 		console.error("Error: ", error.message);
-		handle404(_id, res);
 	}
 });
 
@@ -26,7 +27,7 @@ router.post("/", async (req, res) => {
 	const { isGold, name, phone } = req.body;
 	let customer = new Customer({ isGold, name, phone });
 	try {
-		customer = await customer.save();
+		await customer.save();
 		res.send(customer);
 	} catch (error) {
 		console.error("error: ", error.message);
@@ -50,11 +51,12 @@ router.put("/:id", async (req, res) => {
 	}
 });
 
-router.delete("/:id", async (req, res) => {
-	const _id = req.params.id;
-	const customer = await Customer.findOneAndRemove({ _id });
-	handle404(customer, _id, res);
-	res.send(customer);
+router.delete("/:id", (req, res) => {
+	Customer.findByIdAndRemove(req.params.id, function (err, customer) {
+		if (err) console.error("ERROR: ", err);
+		if (!customer) handle404("customer", req.params.id, res);
+		if (customer) res.send(customer);
+	});
 });
 
 module.exports = router;
