@@ -1,0 +1,22 @@
+web:
+	build: .
+	command: source ~/.profile
+	command: node index.js
+	ports:
+		- "3000:3000"
+		links:
+			- db
+			environment:
+				MONGO_DATABASE: myapp
+				MONGO_USER: myapp
+				MONGO_PASSWORD: mysecurepass
+				MONGO_HOST: db
+				db:
+					image: mongo
+					ports:
+						- "27017:27017"
+						environment:
+							MONGO_DATABASE: myapp
+							MONGO_USER: myapp
+							MONGO_PASSWORD: mysecurepass
+							
